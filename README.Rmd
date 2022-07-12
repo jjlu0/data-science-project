@@ -10,10 +10,3 @@ This is a project by Jingjing Luo analyzing data on Goodreads book reviews. The 
 
 
 
-
-
-
-
-Include in your README:
-* A description (1-2 sentences) about the dataset
-* Your name
