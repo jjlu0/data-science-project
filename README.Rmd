@@ -1,0 +1,19 @@
+---
+title: "README"
+author: "Jingjing"
+date: '2022-07-12'
+output: html_document
+---
+
+This is a project by Jingjing Luo analyzing data on Goodreads book reviews. The data comes from [Kaggle](https://www.kaggle.com/datasets/jealousleopard/goodreadsbooks)
+
+
+
+
+
+
+
+
+Include in your README:
+* A description (1-2 sentences) about the dataset
+* Your name
