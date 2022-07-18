@@ -1,0 +1,297 @@
+---
+title: "Data Processing"
+author: "Jingjing"
+date: '2022-07-13'
+output: html_document
+---
+# Introduction to dplyr
+
+dplyr is an R package in the tidyverse. We can load the package using `install.packages(dplyr)` then get it from the library. 
+
+```{r}
+#load required packages and libraries
+#install.packages("dplyr")
+library(dplyr) #dplyr lets us manipulate data
+library(ggplot2)
+
+#preview dataset
+head(starwars) #can do comma after object and specify how many rows
+
+```
+
+## Filtering data
+
+We can filter data using `filter()`. We are subsetting our dataset based on the data values. This allows us to subset observations (rows) based on their values/variables (in columns). Subsetting means splitting a full dataset into small subsets. This is useful to limit categories and NA stuff.  
+
+Tips:
+* Be sure you spell the column name correctly (and the value name if it's a categorical variable)
+* Be sure to use `==` when comparing observations. Remember, `=` is an assignment operator (assign parameters or objects to values)
+* We can use `<`, `>`, `==`, `!=`, `<=`, or `>=` to compare numeric or categorical variables (nominal variables are ranked alphabetically while ordinal variables have a built-in rank)
+
+
+```{r}
+filter(starwars, hair_color == "blond" | hair_color == "blonde") 
+filter(starwars, hair_color == "blond" & species == "Human" )
+filter(starwars, species == "Human", homeworld == "Tatooine", skin_color == "fair")
+
+filter(starwars, hair_color %in% c("blond", "blonde", "brown"), species == "Human", height > 75)
+filter(starwars, mass != 75 | is.na(mass), name < "Mace") #filters out the rows where the mass is NA
+
+filter(starwars, name < "Mace", mass != 75)
+# goes in alphabetical order
+
+
+
+filteredData <- filter(starwars, species == "Human", homeworld == "Tatooine", skin_color == "fair")
+
+
+## Find all characters that are shorter than 100 cm
+filter(starwars, height < 100, species != "Doid")
+View(starwars)
+
+
+
+## Which characters were born between the years 100 and 200 (inclusive)
+filter(starwars, birth_year %in% c(100:200)) #not good
+filter(starwars, birth_year <= 200, birth_year >= 100)
+?between()
+filter(starwars, between(birth_year, 100, 200)) #inclusive
+
+
+
+## Which characters weigh over 100kg but are shorter than 185 cm?
+filter(starwars, height < 185 & mass > 100)
+
+## Which characters are missing a hair color?
+filter(starwars, is.na(hair_color))
+
+
+
+## Missing Values
+#NA means the value is unknown, returns unknown
+NA > 5 #it doesn't know
+NA + 10
+NA/2
+NA == NA #two unknown values and you don't know if they are equal to each other, doesn't know so returns NA
+
+mass <- NA
+mass == 10
+is.na(mass) #is.na() figures out whether something is NA, returns TRUE
+
+```
+
+### R Boolean Expressions
+
+**Representing OR** in R is `|`  
+<br>
+**Representing AND** in R:
+* can be `&` if each variable has equal weight
+* can use a `,` if want comp to process left to right, and stop processing when reach a FALSE 
+<br>
+**Representing NOT** in R is just an `!`
+**Representing IN** is `%in%`
+* put a vector and check is some value matches any one of values in the vector and counts it
+* you can use IN when there's one variable and you can compare with a bunch of other ones (use OR is multiple variables)
+
+### Categorical Ordinal Data Filtering
+```{r}
+
+##ranked data (categorical ordinal) filter
+View(diamonds) #Views dataset
+class(diamonds$cut) #gives you the specific type of data
+summary(diamonds$cut) #gives you a count of each category or summary statistics (quartiles) if numeric
+head(diamonds$cut) #displays first 6 rows, the rankings aare predetermined by creator of dataset
+
+filter(diamonds, cut >= "Very Good")
+
+## Change Ordering categorical data
+unique(starwars$eye_color) #tells every unique value there is in a vector
+factor(starwars$eye_color, c("red", "orange", "gold", "yellow", "green, yellow", "blue", "black"), ordered = T) #factor() changes things into categories and from nominal to ordinal and the observation unaccounted for turn into <NA>
+table(starwars$eye_color) #gives a count of each unique value
+```
+
+
+## Arranging Data
+`arrange()` reorders rows. It does not remove any rows.
+NA values are always at the end when you order by a column.
+
+```{r}
+
+#lowest to highest birth_year
+arrange(starwars, birth_year) 
+
+#highest to lower birth_year
+arrange(starwars, desc(birth_year))
+
+#when arranging categorical nominal, goes uppercase --> lowercase, alphabet, if same hair_color, go by default order
+arrange(starwars, hair_color)
+
+#multiple columns
+arrange(starwars, hair_color, birth_year) #count by hair_color first and if same hair_color --> measure ascending birth_year
+
+### Practice!
+
+## Arrange starwars characters to find the tallest characters and the shortest characters
+arrange(starwars, height)
+arrange(starwars, desc(height))
+
+## Alphabetize the starwars characters by name
+arrange(starwars, name)
+
+## How could you use arrange() to sort all missing values to the start
+arrange(starwars, desc(is.na(starwars))) #or list them all out
+```
+
+### Selecting Data
+
+We can select certain columns in the dataset. `select()` allows us to retain only certain variables (columns). It doesn't change the order, but it removes columns not named. This is a way to make data anonymous. 
+
+```{r}
+
+select(starwars, hair_color, skin_color, eye_color)
+
+# can select stuff without saying name of columns
+select(starwars, hair_color:eye_color) #returns every column between first and last inclusive
+
+select(starwars, -(hair_color:eye_color)) #negative sign gets rid of stuff after it
+select(starwars, -hair_color)
+
+starwars_noColor <- select(starwars, -(hair_color:eye_color))
+#ggplot(starwars_noColor, aes(x = hair_color)) # error because we removed it
+
+# functions to go along with select()
+select(starwars, contains("color")) #pulls every column that contains the word color
+select(starwars, ends_with("color"))
+select
+select(starwars, starts_with("s"), ends_with("color")) # in select() a comma means "OR", in filter(), a comma means "AND"
+
+
+## Rename Stuff
+starwars <- rename(starwars, birth_year = birthYear) 
+#starwars <- rename(starwars, birth_year = birthYear) 
+
+## We can use select() to reorder columns
+select(starwars, species, species, species) #doesn't repeat columns so only shows columns once
+select(starwars, species, everything()) #everything is the rest of them
+
+### Practice!!
+
+## Select out the homeworld and species for the starwars dataset. What question might this subset of variable help answer?
+select(starwars, homeworld, species)
+
+
+## Brainstorm as many ways as possible to select hair_color, eye_color, skin_colors and birth_year
+
+
+
+```
+### Mutate
+
+`mutate()` adds new columns to the end of the dataset. The new columns created are functions of the previous columns.
+
+Arithmetic operators are all vectorized and will square each row separately (unique for each row) ie: squared, squared-root...
+
+```{r}
+
+starwars_small <- mutate(starwars_small, height_m = height/100)
+mutate(starwars_small, bmi = mass/(height_m^2))
+
+#can add multiple columns at once
+starwars_small <- select(starwars, height, mass, birth_year)
+head(starwars_small)
+mutate(starwars_small, height_m = height/100, bmi = mass/(height_m^2))
+
+# to only keep new columns, use transmute
+transmute(starwars_small, 
+          height_m = height/100, 
+          bmi = mass/(height_m^2))
+
+
+## using aggregate functions (ie: mean, median)
+mutate(starwars_small, tot_mass = sum(mass, na.rm = T)) #finds total mass of entire column
+
+mutate(starwars_small, tot_mass = sum(mass, na.rm = T), proportional_mass = mass/tot_mass) #percentage of the total mass each character takes up
+
+```
+
+
+### Summarize
+
+`summarise()` or `summarize()` is used to summarize and group data. It collapses an entire column of data to a single value. 
+
+```{r}
+
+mutate(starwars, mean_mass = mean(mass, na.rm = T))
+summarize(starwars, 
+          mean_mass = mean(mass, na.rm = T), 
+          mean_height = mean(height, na.rm = T)) #like mutating
+#na.rm removes the NA values
+
+#would use summarize() instead of mutate()/transmute() if you want to summarize multiple columns
+
+
+## Summary of each group
+summarise(group_by(starwars, species), 
+          mean_mass = mean(mass, na.rm = T)) #get mean_mass of each species
+
+species_masses <- summarize(group_by(starwars, species), 
+                          mean_mass = mean(mass, na.rm = T), 
+                          count = n()) #n() returns the number of values in each species, number of individuals calculated each time
+
+#the pipe operature %>%
+# function(x, y) is the same as x %>% function(y)
+#takes everything to the left and follows arrow to become the input of next function
+species_masses <- starwars %>%
+  group_by(species) %>%
+  summarise(mean_mass = mean(mass, na.rm = T), count = n()) %>%
+  arrange(desc(mean_mass))
+
+species_masses
+
+#arrange(species_masses, desc(mean_mass))
+```
+
+### Sampling a designated number of rows
+
+`sample_n()` allows us to sample a **random** number of rows from our dataset.
+
+```{r}
+
+## 10 random rows
+starwars_10rows <- sample_n(starwars, 10) #sample random number of rows, changes each time you run
+
+starwars_10rows #if saved as object, stays the same rows
+
+## 10% of rows, selected randomly
+nrow(starwars) #total number of rows is 87
+starwars_10percent <- sample_frac(starwars, 0.1)
+starwars_10percent #9 rows is 10%
+
+# group_by() with sampling
+
+starwars %>%
+  group_by(species)%>%
+  sample_n(1) #group_by() finds 1 row per group... species
+
+
+```
+
+
+
+### Slicing a part of the data
+
+We can take a "slice" of our dataset using `slice()` and its related set of functions.This retains the order of our rows and is **NOT** random.
+
+```{r}
+
+slice(starwars, 50:60) #inclusive, slice by index value (row number)
+
+slice_head(starwars, n = 10) #first 10 rows by index
+slice_tail(starwars, n = 10) #last 10 rows by index
+
+slice_min(starwars, order_by = mass, n = 10) #rows with lowest 10 heights
+slice_max(starwars, order_by = mass, n = 10) #rows with highest 10 masses
+
+```
+
+
